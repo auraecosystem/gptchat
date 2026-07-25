@@ -161,6 +161,14 @@ const cn = {
     Title: "设置",
     SubTitle: "所有设置选项",
     ShowPassword: "显示密码",
+    Tabs: {
+      general: "常用",
+      chat: "对话",
+      model: "模型",
+      service: "服务",
+      sync: "数据同步",
+      system: "系统",
+    },
 
     Danger: {
       Reset: {

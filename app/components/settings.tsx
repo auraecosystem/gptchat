@@ -90,6 +90,35 @@ import { ProviderType } from "../utils/cloud";
 import { TTSConfigList } from "./tts-config";
 import { RealtimeConfigList } from "./realtime-chat/realtime-config";
 
+const settingsTabs = [
+  "general",
+  "chat",
+  "model",
+  "service",
+  "sync",
+  "system",
+] as const;
+
+type SettingsTab = (typeof settingsTabs)[number];
+
+function getNextSettingsTab(
+  currentTab: SettingsTab,
+  key: string,
+): SettingsTab | undefined {
+  const currentIndex = settingsTabs.indexOf(currentTab);
+
+  if (key === "Home") return settingsTabs[0];
+  if (key === "End") return settingsTabs[settingsTabs.length - 1];
+  if (key === "ArrowRight") {
+    return settingsTabs[(currentIndex + 1) % settingsTabs.length];
+  }
+  if (key === "ArrowLeft") {
+    return settingsTabs[
+      (currentIndex - 1 + settingsTabs.length) % settingsTabs.length
+    ];
+  }
+}
+
 function EditPromptModal(props: { id: string; onClose: () => void }) {
   const promptStore = usePromptStore();
   const prompt = promptStore.get(props.id);
@@ -584,6 +613,7 @@ function SyncItems() {
 export function Settings() {
   const navigate = useNavigate();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [activeTab, setActiveTab] = useState<SettingsTab>("general");
   const config = useAppConfig();
   const updateConfig = config.update;
 
@@ -1459,44 +1489,44 @@ export function Settings() {
     </>
   );
 
-  const ai302ConfigComponent = accessStore.provider === ServiceProvider["302.AI"] && (
+  const ai302ConfigComponent = accessStore.provider ===
+    ServiceProvider["302.AI"] && (
     <>
       <ListItem
-          title={Locale.Settings.Access.AI302.Endpoint.Title}
-          subTitle={
-            Locale.Settings.Access.AI302.Endpoint.SubTitle +
-            AI302.ExampleEndpoint
+        title={Locale.Settings.Access.AI302.Endpoint.Title}
+        subTitle={
+          Locale.Settings.Access.AI302.Endpoint.SubTitle + AI302.ExampleEndpoint
+        }
+      >
+        <input
+          aria-label={Locale.Settings.Access.AI302.Endpoint.Title}
+          type="text"
+          value={accessStore.ai302Url}
+          placeholder={AI302.ExampleEndpoint}
+          onChange={(e) =>
+            accessStore.update(
+              (access) => (access.ai302Url = e.currentTarget.value),
+            )
           }
-        >
-          <input
-            aria-label={Locale.Settings.Access.AI302.Endpoint.Title}
-            type="text"
-            value={accessStore.ai302Url}
-            placeholder={AI302.ExampleEndpoint}
-            onChange={(e) =>
-              accessStore.update(
-                (access) => (access.ai302Url = e.currentTarget.value),
-              )
-            }
-          ></input>
-        </ListItem>
-        <ListItem
-          title={Locale.Settings.Access.AI302.ApiKey.Title}
-          subTitle={Locale.Settings.Access.AI302.ApiKey.SubTitle}
-        >
-          <PasswordInput
-            aria-label={Locale.Settings.Access.AI302.ApiKey.Title}
-            value={accessStore.ai302ApiKey}
-            type="text"
-            placeholder={Locale.Settings.Access.AI302.ApiKey.Placeholder}
-            onChange={(e) => {
-              accessStore.update(
-                (access) => (access.ai302ApiKey = e.currentTarget.value),
-              );
-            }}
-          />
-        </ListItem>
-      </>
+        ></input>
+      </ListItem>
+      <ListItem
+        title={Locale.Settings.Access.AI302.ApiKey.Title}
+        subTitle={Locale.Settings.Access.AI302.ApiKey.SubTitle}
+      >
+        <PasswordInput
+          aria-label={Locale.Settings.Access.AI302.ApiKey.Title}
+          value={accessStore.ai302ApiKey}
+          type="text"
+          placeholder={Locale.Settings.Access.AI302.ApiKey.Placeholder}
+          onChange={(e) => {
+            accessStore.update(
+              (access) => (access.ai302ApiKey = e.currentTarget.value),
+            );
+          }}
+        />
+      </ListItem>
+    </>
   );
 
   return (
@@ -1524,435 +1554,520 @@ export function Settings() {
         </div>
       </div>
       <div className={styles["settings"]}>
-        <List>
-          <ListItem title={Locale.Settings.Avatar}>
-            <Popover
-              onClose={() => setShowEmojiPicker(false)}
-              content={
-                <AvatarPicker
-                  onEmojiClick={(avatar: string) => {
-                    updateConfig((config) => (config.avatar = avatar));
-                    setShowEmojiPicker(false);
-                  }}
-                />
+        <div
+          className={styles.tabs}
+          role="tablist"
+          aria-label={Locale.Settings.Title}
+        >
+          {settingsTabs.map((tab) => (
+            <button
+              key={tab}
+              id={`settings-tab-${tab}`}
+              className={styles.tab}
+              role="tab"
+              type="button"
+              tabIndex={activeTab === tab ? 0 : -1}
+              aria-controls={`settings-panel-${tab}`}
+              aria-selected={activeTab === tab}
+              onClick={() => setActiveTab(tab)}
+              onFocus={(event) =>
+                event.currentTarget.scrollIntoView({
+                  block: "nearest",
+                  inline: "nearest",
+                })
               }
-              open={showEmojiPicker}
+              onKeyDown={(event) => {
+                const nextTab = getNextSettingsTab(tab, event.key);
+                if (!nextTab) return;
+
+                event.preventDefault();
+                setActiveTab(nextTab);
+                document.getElementById(`settings-tab-${nextTab}`)?.focus();
+              }}
             >
-              <div
-                aria-label={Locale.Settings.Avatar}
-                tabIndex={0}
-                className={styles.avatar}
-                onClick={() => {
-                  setShowEmojiPicker(!showEmojiPicker);
-                }}
+              {Locale.Settings.Tabs[tab]}
+            </button>
+          ))}
+        </div>
+
+        <div
+          id="settings-panel-general"
+          role="tabpanel"
+          aria-labelledby="settings-tab-general"
+          hidden={activeTab !== "general"}
+        >
+          <List>
+            <ListItem title={Locale.Settings.Avatar}>
+              <Popover
+                onClose={() => setShowEmojiPicker(false)}
+                content={
+                  <AvatarPicker
+                    onEmojiClick={(avatar: string) => {
+                      updateConfig((config) => (config.avatar = avatar));
+                      setShowEmojiPicker(false);
+                    }}
+                  />
+                }
+                open={showEmojiPicker}
               >
-                <Avatar avatar={config.avatar} />
-              </div>
-            </Popover>
-          </ListItem>
+                <div
+                  aria-label={Locale.Settings.Avatar}
+                  tabIndex={0}
+                  className={styles.avatar}
+                  onClick={() => {
+                    setShowEmojiPicker(!showEmojiPicker);
+                  }}
+                >
+                  <Avatar avatar={config.avatar} />
+                </div>
+              </Popover>
+            </ListItem>
 
-          <ListItem
-            title={Locale.Settings.Update.Version(currentVersion ?? "unknown")}
-            subTitle={
-              checkingUpdate
-                ? Locale.Settings.Update.IsChecking
-                : hasNewVersion
-                ? Locale.Settings.Update.FoundUpdate(remoteId ?? "ERROR")
-                : Locale.Settings.Update.IsLatest
-            }
-          >
-            {checkingUpdate ? (
-              <LoadingIcon />
-            ) : hasNewVersion ? (
-              clientConfig?.isApp ? (
-                <IconButton
-                  icon={<ResetIcon></ResetIcon>}
-                  text={Locale.Settings.Update.GoToUpdate}
-                  onClick={() => clientUpdate()}
-                />
-              ) : (
-                <Link href={updateUrl} target="_blank" className="link">
-                  {Locale.Settings.Update.GoToUpdate}
-                </Link>
-              )
-            ) : (
-              <IconButton
-                icon={<ResetIcon></ResetIcon>}
-                text={Locale.Settings.Update.CheckUpdate}
-                onClick={() => checkUpdate(true)}
-              />
-            )}
-          </ListItem>
-
-          <ListItem title={Locale.Settings.SendKey}>
-            <Select
-              aria-label={Locale.Settings.SendKey}
-              value={config.submitKey}
-              onChange={(e) => {
-                updateConfig(
-                  (config) =>
-                    (config.submitKey = e.target.value as any as SubmitKey),
-                );
-              }}
-            >
-              {Object.values(SubmitKey).map((v) => (
-                <option value={v} key={v}>
-                  {v}
-                </option>
-              ))}
-            </Select>
-          </ListItem>
-
-          <ListItem title={Locale.Settings.Theme}>
-            <Select
-              aria-label={Locale.Settings.Theme}
-              value={config.theme}
-              onChange={(e) => {
-                updateConfig(
-                  (config) => (config.theme = e.target.value as any as Theme),
-                );
-              }}
-            >
-              {Object.values(Theme).map((v) => (
-                <option value={v} key={v}>
-                  {v}
-                </option>
-              ))}
-            </Select>
-          </ListItem>
-
-          <ListItem title={Locale.Settings.Lang.Name}>
-            <Select
-              aria-label={Locale.Settings.Lang.Name}
-              value={getLang()}
-              onChange={(e) => {
-                changeLang(e.target.value as any);
-              }}
-            >
-              {AllLangs.map((lang) => (
-                <option value={lang} key={lang}>
-                  {ALL_LANG_OPTIONS[lang]}
-                </option>
-              ))}
-            </Select>
-          </ListItem>
-
-          <ListItem
-            title={Locale.Settings.FontSize.Title}
-            subTitle={Locale.Settings.FontSize.SubTitle}
-          >
-            <InputRange
-              aria={Locale.Settings.FontSize.Title}
-              title={`${config.fontSize ?? 14}px`}
-              value={config.fontSize}
-              min="12"
-              max="40"
-              step="1"
-              onChange={(e) =>
-                updateConfig(
-                  (config) =>
-                    (config.fontSize = Number.parseInt(e.currentTarget.value)),
-                )
-              }
-            ></InputRange>
-          </ListItem>
-
-          <ListItem
-            title={Locale.Settings.FontFamily.Title}
-            subTitle={Locale.Settings.FontFamily.SubTitle}
-          >
-            <input
-              aria-label={Locale.Settings.FontFamily.Title}
-              type="text"
-              value={config.fontFamily}
-              placeholder={Locale.Settings.FontFamily.Placeholder}
-              onChange={(e) =>
-                updateConfig(
-                  (config) => (config.fontFamily = e.currentTarget.value),
-                )
-              }
-            ></input>
-          </ListItem>
-
-          <ListItem
-            title={Locale.Settings.AutoGenerateTitle.Title}
-            subTitle={Locale.Settings.AutoGenerateTitle.SubTitle}
-          >
-            <input
-              aria-label={Locale.Settings.AutoGenerateTitle.Title}
-              type="checkbox"
-              checked={config.enableAutoGenerateTitle}
-              onChange={(e) =>
-                updateConfig(
-                  (config) =>
-                    (config.enableAutoGenerateTitle = e.currentTarget.checked),
-                )
-              }
-            ></input>
-          </ListItem>
-
-          <ListItem
-            title={Locale.Settings.SendPreviewBubble.Title}
-            subTitle={Locale.Settings.SendPreviewBubble.SubTitle}
-          >
-            <input
-              aria-label={Locale.Settings.SendPreviewBubble.Title}
-              type="checkbox"
-              checked={config.sendPreviewBubble}
-              onChange={(e) =>
-                updateConfig(
-                  (config) =>
-                    (config.sendPreviewBubble = e.currentTarget.checked),
-                )
-              }
-            ></input>
-          </ListItem>
-
-          <ListItem
-            title={Locale.Mask.Config.Artifacts.Title}
-            subTitle={Locale.Mask.Config.Artifacts.SubTitle}
-          >
-            <input
-              aria-label={Locale.Mask.Config.Artifacts.Title}
-              type="checkbox"
-              checked={config.enableArtifacts}
-              onChange={(e) =>
-                updateConfig(
-                  (config) =>
-                    (config.enableArtifacts = e.currentTarget.checked),
-                )
-              }
-            ></input>
-          </ListItem>
-          <ListItem
-            title={Locale.Mask.Config.CodeFold.Title}
-            subTitle={Locale.Mask.Config.CodeFold.SubTitle}
-          >
-            <input
-              aria-label={Locale.Mask.Config.CodeFold.Title}
-              type="checkbox"
-              checked={config.enableCodeFold}
-              data-testid="enable-code-fold-checkbox"
-              onChange={(e) =>
-                updateConfig(
-                  (config) => (config.enableCodeFold = e.currentTarget.checked),
-                )
-              }
-            ></input>
-          </ListItem>
-        </List>
-
-        <SyncItems />
-
-        <List>
-          <ListItem
-            title={Locale.Settings.Mask.Splash.Title}
-            subTitle={Locale.Settings.Mask.Splash.SubTitle}
-          >
-            <input
-              aria-label={Locale.Settings.Mask.Splash.Title}
-              type="checkbox"
-              checked={!config.dontShowMaskSplashScreen}
-              onChange={(e) =>
-                updateConfig(
-                  (config) =>
-                    (config.dontShowMaskSplashScreen =
-                      !e.currentTarget.checked),
-                )
-              }
-            ></input>
-          </ListItem>
-
-          <ListItem
-            title={Locale.Settings.Mask.Builtin.Title}
-            subTitle={Locale.Settings.Mask.Builtin.SubTitle}
-          >
-            <input
-              aria-label={Locale.Settings.Mask.Builtin.Title}
-              type="checkbox"
-              checked={config.hideBuiltinMasks}
-              onChange={(e) =>
-                updateConfig(
-                  (config) =>
-                    (config.hideBuiltinMasks = e.currentTarget.checked),
-                )
-              }
-            ></input>
-          </ListItem>
-        </List>
-
-        <List>
-          <ListItem
-            title={Locale.Settings.Prompt.Disable.Title}
-            subTitle={Locale.Settings.Prompt.Disable.SubTitle}
-          >
-            <input
-              aria-label={Locale.Settings.Prompt.Disable.Title}
-              type="checkbox"
-              checked={config.disablePromptHint}
-              onChange={(e) =>
-                updateConfig(
-                  (config) =>
-                    (config.disablePromptHint = e.currentTarget.checked),
-                )
-              }
-            ></input>
-          </ListItem>
-
-          <ListItem
-            title={Locale.Settings.Prompt.List}
-            subTitle={Locale.Settings.Prompt.ListCount(
-              builtinCount,
-              customCount,
-            )}
-          >
-            <IconButton
-              aria={Locale.Settings.Prompt.List + Locale.Settings.Prompt.Edit}
-              icon={<EditIcon />}
-              text={Locale.Settings.Prompt.Edit}
-              onClick={() => setShowPromptModal(true)}
-            />
-          </ListItem>
-        </List>
-
-        <List id={SlotID.CustomModel}>
-          {saasStartComponent}
-          {accessCodeComponent}
-
-          {!accessStore.hideUserApiKey && (
-            <>
-              {useCustomConfigComponent}
-
-              {accessStore.useCustomConfig && (
-                <>
-                  <ListItem
-                    title={Locale.Settings.Access.Provider.Title}
-                    subTitle={Locale.Settings.Access.Provider.SubTitle}
-                  >
-                    <Select
-                      aria-label={Locale.Settings.Access.Provider.Title}
-                      value={accessStore.provider}
-                      onChange={(e) => {
-                        accessStore.update(
-                          (access) =>
-                            (access.provider = e.target
-                              .value as ServiceProvider),
-                        );
-                      }}
-                    >
-                      {Object.entries(ServiceProvider).map(([k, v]) => (
-                        <option value={v} key={k}>
-                          {k}
-                        </option>
-                      ))}
-                    </Select>
-                  </ListItem>
-
-                  {openAIConfigComponent}
-                  {azureConfigComponent}
-                  {googleConfigComponent}
-                  {anthropicConfigComponent}
-                  {baiduConfigComponent}
-                  {byteDanceConfigComponent}
-                  {alibabaConfigComponent}
-                  {tencentConfigComponent}
-                  {moonshotConfigComponent}
-                  {deepseekConfigComponent}
-                  {stabilityConfigComponent}
-                  {lflytekConfigComponent}
-                  {XAIConfigComponent}
-                  {chatglmConfigComponent}
-                  {siliconflowConfigComponent}
-                  {ai302ConfigComponent}
-                </>
-              )}
-            </>
-          )}
-
-          {!shouldHideBalanceQuery && !clientConfig?.isApp ? (
             <ListItem
-              title={Locale.Settings.Usage.Title}
+              title={Locale.Settings.Update.Version(
+                currentVersion ?? "unknown",
+              )}
               subTitle={
-                showUsage
-                  ? loadingUsage
-                    ? Locale.Settings.Usage.IsChecking
-                    : Locale.Settings.Usage.SubTitle(
-                        usage?.used ?? "[?]",
-                        usage?.subscription ?? "[?]",
-                      )
-                  : Locale.Settings.Usage.NoAccess
+                checkingUpdate
+                  ? Locale.Settings.Update.IsChecking
+                  : hasNewVersion
+                  ? Locale.Settings.Update.FoundUpdate(remoteId ?? "ERROR")
+                  : Locale.Settings.Update.IsLatest
               }
             >
-              {!showUsage || loadingUsage ? (
-                <div />
+              {checkingUpdate ? (
+                <LoadingIcon />
+              ) : hasNewVersion ? (
+                clientConfig?.isApp ? (
+                  <IconButton
+                    icon={<ResetIcon></ResetIcon>}
+                    text={Locale.Settings.Update.GoToUpdate}
+                    onClick={() => clientUpdate()}
+                  />
+                ) : (
+                  <Link href={updateUrl} target="_blank" className="link">
+                    {Locale.Settings.Update.GoToUpdate}
+                  </Link>
+                )
               ) : (
                 <IconButton
                   icon={<ResetIcon></ResetIcon>}
-                  text={Locale.Settings.Usage.Check}
-                  onClick={() => checkUsage(true)}
+                  text={Locale.Settings.Update.CheckUpdate}
+                  onClick={() => checkUpdate(true)}
                 />
               )}
             </ListItem>
-          ) : null}
 
-          <ListItem
-            title={Locale.Settings.Access.CustomModel.Title}
-            subTitle={Locale.Settings.Access.CustomModel.SubTitle}
-            vertical={true}
-          >
-            <input
-              aria-label={Locale.Settings.Access.CustomModel.Title}
-              style={{ width: "100%", maxWidth: "unset", textAlign: "left" }}
-              type="text"
-              value={config.customModels}
-              placeholder="model1,model2,model3"
-              onChange={(e) =>
+            <ListItem title={Locale.Settings.SendKey}>
+              <Select
+                aria-label={Locale.Settings.SendKey}
+                value={config.submitKey}
+                onChange={(e) => {
+                  updateConfig(
+                    (config) =>
+                      (config.submitKey = e.target.value as any as SubmitKey),
+                  );
+                }}
+              >
+                {Object.values(SubmitKey).map((v) => (
+                  <option value={v} key={v}>
+                    {v}
+                  </option>
+                ))}
+              </Select>
+            </ListItem>
+
+            <ListItem title={Locale.Settings.Theme}>
+              <Select
+                aria-label={Locale.Settings.Theme}
+                value={config.theme}
+                onChange={(e) => {
+                  updateConfig(
+                    (config) => (config.theme = e.target.value as any as Theme),
+                  );
+                }}
+              >
+                {Object.values(Theme).map((v) => (
+                  <option value={v} key={v}>
+                    {v}
+                  </option>
+                ))}
+              </Select>
+            </ListItem>
+
+            <ListItem title={Locale.Settings.Lang.Name}>
+              <Select
+                aria-label={Locale.Settings.Lang.Name}
+                value={getLang()}
+                onChange={(e) => {
+                  changeLang(e.target.value as any);
+                }}
+              >
+                {AllLangs.map((lang) => (
+                  <option value={lang} key={lang}>
+                    {ALL_LANG_OPTIONS[lang]}
+                  </option>
+                ))}
+              </Select>
+            </ListItem>
+
+            <ListItem
+              title={Locale.Settings.FontSize.Title}
+              subTitle={Locale.Settings.FontSize.SubTitle}
+            >
+              <InputRange
+                aria={Locale.Settings.FontSize.Title}
+                title={`${config.fontSize ?? 14}px`}
+                value={config.fontSize}
+                min="12"
+                max="40"
+                step="1"
+                onChange={(e) =>
+                  updateConfig(
+                    (config) =>
+                      (config.fontSize = Number.parseInt(
+                        e.currentTarget.value,
+                      )),
+                  )
+                }
+              ></InputRange>
+            </ListItem>
+
+            <ListItem
+              title={Locale.Settings.FontFamily.Title}
+              subTitle={Locale.Settings.FontFamily.SubTitle}
+            >
+              <input
+                aria-label={Locale.Settings.FontFamily.Title}
+                type="text"
+                value={config.fontFamily}
+                placeholder={Locale.Settings.FontFamily.Placeholder}
+                onChange={(e) =>
+                  updateConfig(
+                    (config) => (config.fontFamily = e.currentTarget.value),
+                  )
+                }
+              ></input>
+            </ListItem>
+
+            <ListItem
+              title={Locale.Settings.AutoGenerateTitle.Title}
+              subTitle={Locale.Settings.AutoGenerateTitle.SubTitle}
+            >
+              <input
+                aria-label={Locale.Settings.AutoGenerateTitle.Title}
+                type="checkbox"
+                checked={config.enableAutoGenerateTitle}
+                onChange={(e) =>
+                  updateConfig(
+                    (config) =>
+                      (config.enableAutoGenerateTitle =
+                        e.currentTarget.checked),
+                  )
+                }
+              ></input>
+            </ListItem>
+
+            <ListItem
+              title={Locale.Settings.SendPreviewBubble.Title}
+              subTitle={Locale.Settings.SendPreviewBubble.SubTitle}
+            >
+              <input
+                aria-label={Locale.Settings.SendPreviewBubble.Title}
+                type="checkbox"
+                checked={config.sendPreviewBubble}
+                onChange={(e) =>
+                  updateConfig(
+                    (config) =>
+                      (config.sendPreviewBubble = e.currentTarget.checked),
+                  )
+                }
+              ></input>
+            </ListItem>
+
+            <ListItem
+              title={Locale.Mask.Config.Artifacts.Title}
+              subTitle={Locale.Mask.Config.Artifacts.SubTitle}
+            >
+              <input
+                aria-label={Locale.Mask.Config.Artifacts.Title}
+                type="checkbox"
+                checked={config.enableArtifacts}
+                onChange={(e) =>
+                  updateConfig(
+                    (config) =>
+                      (config.enableArtifacts = e.currentTarget.checked),
+                  )
+                }
+              ></input>
+            </ListItem>
+            <ListItem
+              title={Locale.Mask.Config.CodeFold.Title}
+              subTitle={Locale.Mask.Config.CodeFold.SubTitle}
+            >
+              <input
+                aria-label={Locale.Mask.Config.CodeFold.Title}
+                type="checkbox"
+                checked={config.enableCodeFold}
+                data-testid="enable-code-fold-checkbox"
+                onChange={(e) =>
+                  updateConfig(
+                    (config) =>
+                      (config.enableCodeFold = e.currentTarget.checked),
+                  )
+                }
+              ></input>
+            </ListItem>
+          </List>
+        </div>
+
+        <div
+          id="settings-panel-sync"
+          role="tabpanel"
+          aria-labelledby="settings-tab-sync"
+          hidden={activeTab !== "sync"}
+        >
+          <SyncItems />
+        </div>
+
+        <div
+          id="settings-panel-chat"
+          role="tabpanel"
+          aria-labelledby="settings-tab-chat"
+          hidden={activeTab !== "chat"}
+        >
+          <List>
+            <ListItem
+              title={Locale.Settings.Mask.Splash.Title}
+              subTitle={Locale.Settings.Mask.Splash.SubTitle}
+            >
+              <input
+                aria-label={Locale.Settings.Mask.Splash.Title}
+                type="checkbox"
+                checked={!config.dontShowMaskSplashScreen}
+                onChange={(e) =>
+                  updateConfig(
+                    (config) =>
+                      (config.dontShowMaskSplashScreen =
+                        !e.currentTarget.checked),
+                  )
+                }
+              ></input>
+            </ListItem>
+
+            <ListItem
+              title={Locale.Settings.Mask.Builtin.Title}
+              subTitle={Locale.Settings.Mask.Builtin.SubTitle}
+            >
+              <input
+                aria-label={Locale.Settings.Mask.Builtin.Title}
+                type="checkbox"
+                checked={config.hideBuiltinMasks}
+                onChange={(e) =>
+                  updateConfig(
+                    (config) =>
+                      (config.hideBuiltinMasks = e.currentTarget.checked),
+                  )
+                }
+              ></input>
+            </ListItem>
+          </List>
+
+          <List>
+            <ListItem
+              title={Locale.Settings.Prompt.Disable.Title}
+              subTitle={Locale.Settings.Prompt.Disable.SubTitle}
+            >
+              <input
+                aria-label={Locale.Settings.Prompt.Disable.Title}
+                type="checkbox"
+                checked={config.disablePromptHint}
+                onChange={(e) =>
+                  updateConfig(
+                    (config) =>
+                      (config.disablePromptHint = e.currentTarget.checked),
+                  )
+                }
+              ></input>
+            </ListItem>
+
+            <ListItem
+              title={Locale.Settings.Prompt.List}
+              subTitle={Locale.Settings.Prompt.ListCount(
+                builtinCount,
+                customCount,
+              )}
+            >
+              <IconButton
+                aria={Locale.Settings.Prompt.List + Locale.Settings.Prompt.Edit}
+                icon={<EditIcon />}
+                text={Locale.Settings.Prompt.Edit}
+                onClick={() => setShowPromptModal(true)}
+              />
+            </ListItem>
+          </List>
+        </div>
+
+        <div
+          id="settings-panel-service"
+          role="tabpanel"
+          aria-labelledby="settings-tab-service"
+          hidden={activeTab !== "service"}
+        >
+          <List id={SlotID.CustomModel}>
+            {saasStartComponent}
+            {accessCodeComponent}
+
+            {!accessStore.hideUserApiKey && (
+              <>
+                {useCustomConfigComponent}
+
+                {accessStore.useCustomConfig && (
+                  <>
+                    <ListItem
+                      title={Locale.Settings.Access.Provider.Title}
+                      subTitle={Locale.Settings.Access.Provider.SubTitle}
+                    >
+                      <Select
+                        aria-label={Locale.Settings.Access.Provider.Title}
+                        value={accessStore.provider}
+                        onChange={(e) => {
+                          accessStore.update(
+                            (access) =>
+                              (access.provider = e.target
+                                .value as ServiceProvider),
+                          );
+                        }}
+                      >
+                        {Object.entries(ServiceProvider).map(([k, v]) => (
+                          <option value={v} key={k}>
+                            {k}
+                          </option>
+                        ))}
+                      </Select>
+                    </ListItem>
+
+                    {openAIConfigComponent}
+                    {azureConfigComponent}
+                    {googleConfigComponent}
+                    {anthropicConfigComponent}
+                    {baiduConfigComponent}
+                    {byteDanceConfigComponent}
+                    {alibabaConfigComponent}
+                    {tencentConfigComponent}
+                    {moonshotConfigComponent}
+                    {deepseekConfigComponent}
+                    {stabilityConfigComponent}
+                    {lflytekConfigComponent}
+                    {XAIConfigComponent}
+                    {chatglmConfigComponent}
+                    {siliconflowConfigComponent}
+                    {ai302ConfigComponent}
+                  </>
+                )}
+              </>
+            )}
+
+            {!shouldHideBalanceQuery && !clientConfig?.isApp ? (
+              <ListItem
+                title={Locale.Settings.Usage.Title}
+                subTitle={
+                  showUsage
+                    ? loadingUsage
+                      ? Locale.Settings.Usage.IsChecking
+                      : Locale.Settings.Usage.SubTitle(
+                          usage?.used ?? "[?]",
+                          usage?.subscription ?? "[?]",
+                        )
+                    : Locale.Settings.Usage.NoAccess
+                }
+              >
+                {!showUsage || loadingUsage ? (
+                  <div />
+                ) : (
+                  <IconButton
+                    icon={<ResetIcon></ResetIcon>}
+                    text={Locale.Settings.Usage.Check}
+                    onClick={() => checkUsage(true)}
+                  />
+                )}
+              </ListItem>
+            ) : null}
+
+            <ListItem
+              title={Locale.Settings.Access.CustomModel.Title}
+              subTitle={Locale.Settings.Access.CustomModel.SubTitle}
+              vertical={true}
+            >
+              <input
+                aria-label={Locale.Settings.Access.CustomModel.Title}
+                style={{ width: "100%", maxWidth: "unset", textAlign: "left" }}
+                type="text"
+                value={config.customModels}
+                placeholder="model1,model2,model3"
+                onChange={(e) =>
+                  config.update(
+                    (config) => (config.customModels = e.currentTarget.value),
+                  )
+                }
+              ></input>
+            </ListItem>
+          </List>
+
+          <List>
+            <RealtimeConfigList
+              realtimeConfig={config.realtimeConfig}
+              updateConfig={(updater) => {
+                const realtimeConfig = { ...config.realtimeConfig };
+                updater(realtimeConfig);
                 config.update(
-                  (config) => (config.customModels = e.currentTarget.value),
-                )
-              }
-            ></input>
-          </ListItem>
-        </List>
+                  (config) => (config.realtimeConfig = realtimeConfig),
+                );
+              }}
+            />
+          </List>
+          <List>
+            <TTSConfigList
+              ttsConfig={config.ttsConfig}
+              updateConfig={(updater) => {
+                const ttsConfig = { ...config.ttsConfig };
+                updater(ttsConfig);
+                config.update((config) => (config.ttsConfig = ttsConfig));
+              }}
+            />
+          </List>
+        </div>
 
-        <List>
-          <ModelConfigList
-            modelConfig={config.modelConfig}
-            updateConfig={(updater) => {
-              const modelConfig = { ...config.modelConfig };
-              updater(modelConfig);
-              config.update((config) => (config.modelConfig = modelConfig));
-            }}
-          />
-        </List>
+        <div
+          id="settings-panel-model"
+          role="tabpanel"
+          aria-labelledby="settings-tab-model"
+          hidden={activeTab !== "model"}
+        >
+          <List>
+            <ModelConfigList
+              modelConfig={config.modelConfig}
+              updateConfig={(updater) => {
+                const modelConfig = { ...config.modelConfig };
+                updater(modelConfig);
+                config.update((config) => (config.modelConfig = modelConfig));
+              }}
+            />
+          </List>
+        </div>
 
         {shouldShowPromptModal && (
           <UserPromptModal onClose={() => setShowPromptModal(false)} />
         )}
-        <List>
-          <RealtimeConfigList
-            realtimeConfig={config.realtimeConfig}
-            updateConfig={(updater) => {
-              const realtimeConfig = { ...config.realtimeConfig };
-              updater(realtimeConfig);
-              config.update(
-                (config) => (config.realtimeConfig = realtimeConfig),
-              );
-            }}
-          />
-        </List>
-        <List>
-          <TTSConfigList
-            ttsConfig={config.ttsConfig}
-            updateConfig={(updater) => {
-              const ttsConfig = { ...config.ttsConfig };
-              updater(ttsConfig);
-              config.update((config) => (config.ttsConfig = ttsConfig));
-            }}
-          />
-        </List>
 
-        <DangerItems />
+        <div
+          id="settings-panel-system"
+          role="tabpanel"
+          aria-labelledby="settings-tab-system"
+          hidden={activeTab !== "system"}
+        >
+          <DangerItems />
+        </div>
       </div>
     </ErrorBoundary>
   );
