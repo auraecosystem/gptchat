@@ -163,6 +163,14 @@ const en: LocaleType = {
     Title: "Settings",
     SubTitle: "All Settings",
     ShowPassword: "ShowPassword",
+    Tabs: {
+      general: "General",
+      chat: "Chat",
+      model: "Model",
+      service: "Services",
+      sync: "Data Sync",
+      system: "System",
+    },
     Danger: {
       Reset: {
         Title: "Reset All Settings",
