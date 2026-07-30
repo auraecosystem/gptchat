@@ -16,10 +16,14 @@ function getModels(remoteModelRes: OpenAIListModelResponse) {
       (m) =>
         !(
           m.id.startsWith("gpt-4") ||
+          m.id.startsWith("gpt-5") ||
           m.id.startsWith("chatgpt-4o") ||
           m.id.startsWith("o1") ||
-          m.id.startsWith("o3")
-        ) || m.id.startsWith("gpt-4o-mini"),
+          m.id.startsWith("o3") ||
+          m.id.startsWith("o4")
+        ) ||
+        m.id.startsWith("gpt-4o-mini") ||
+        m.id.startsWith("gpt-5.6-luna"),
     );
   }
 

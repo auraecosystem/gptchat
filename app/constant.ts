@@ -411,37 +411,20 @@ You are an AI assistant with access to system tools. Your role is to help users 
    
 `;
 
-export const SUMMARIZE_MODEL = "gpt-4o-mini";
-export const GEMINI_SUMMARIZE_MODEL = "gemini-pro";
-export const DEEPSEEK_SUMMARIZE_MODEL = "deepseek-chat";
+export const SUMMARIZE_MODEL = "gpt-5.6-luna";
+export const GEMINI_SUMMARIZE_MODEL = "gemini-3.5-flash-lite";
+export const DEEPSEEK_SUMMARIZE_MODEL = "deepseek-ai/deepseek-v4-flash";
 
 export const KnowledgeCutOffDate: Record<string, string> = {
   default: "2021-09",
-  "gpt-4-turbo": "2023-12",
-  "gpt-4-turbo-2024-04-09": "2023-12",
-  "gpt-4-turbo-preview": "2023-12",
-  "gpt-4o": "2023-10",
-  "gpt-4o-2024-05-13": "2023-10",
-  "gpt-4o-2024-08-06": "2023-10",
-  "gpt-4o-2024-11-20": "2023-10",
-  "chatgpt-4o-latest": "2023-10",
-  "gpt-4o-mini": "2023-10",
-  "gpt-4o-mini-2024-07-18": "2023-10",
-  "gpt-4-vision-preview": "2023-04",
-  "o1-mini-2024-09-12": "2023-10",
-  "o1-mini": "2023-10",
-  "o1-preview-2024-09-12": "2023-10",
-  "o1-preview": "2023-10",
-  "o1-2024-12-17": "2023-10",
-  o1: "2023-10",
-  "o3-mini-2025-01-31": "2023-10",
-  "o3-mini": "2023-10",
   // After improvements,
   // it's now easier to add "KnowledgeCutOffDate" instead of stupid hardcoding it, as was done previously.
-  "gemini-pro": "2023-12",
-  "gemini-pro-vision": "2023-12",
-  "deepseek-chat": "2024-07",
-  "deepseek-coder": "2024-07",
+  "gpt-5.6": "2026-02",
+  "gpt-5.6-sol": "2026-02",
+  "gpt-5.6-terra": "2026-02",
+  "gpt-5.6-luna": "2026-02",
+  // TODO: Claude 5 / Gemini 3.x 系列的官方知识截止日期待补充，
+  // 未列出的模型会回落到上面的 default（2021-09），会写进系统提示词里。
 };
 
 export const DEFAULT_TTS_ENGINE = "OpenAI-TTS";
@@ -461,10 +444,10 @@ export const DEFAULT_TTS_VOICES = [
 export const VISION_MODEL_REGEXES = [
   /vision/,
   /gpt-4o/,
-  /claude-3/,
-  /gemini-1\.5/,
-  /gemini-exp/,
-  /gemini-2\.0/,
+  /gpt-5/, // GPT-5.x 全系支持图片输入
+  /^gpt-image-/,
+  /claude/, // Claude 4/5 全系支持图片输入
+  /gemini-[2-9]/, // Gemini 2.5 及以后全系多模态
   /learnlm/,
   /qwen-vl/,
   /qwen2-vl/,
@@ -476,75 +459,41 @@ export const VISION_MODEL_REGEXES = [
 
 export const EXCLUDE_VISION_MODEL_REGEXES = [/claude-3-5-haiku-20241022/];
 
+// GPT-5.6 家族（2026-07 发布）：sol 为旗舰，terra 均衡，luna 主打低成本。
+// gpt-5.6 是 gpt-5.6-sol 的别名。知识截止 2026-02-16。
 const openaiModels = [
-  // As of July 2024, gpt-4o-mini should be used in place of gpt-3.5-turbo,
-  // as it is cheaper, more capable, multimodal, and just as fast. gpt-3.5-turbo is still available for use in the API.
-  "gpt-3.5-turbo",
-  "gpt-3.5-turbo-1106",
-  "gpt-3.5-turbo-0125",
-  "gpt-4",
-  "gpt-4-0613",
-  "gpt-4-32k",
-  "gpt-4-32k-0613",
-  "gpt-4-turbo",
-  "gpt-4-turbo-preview",
-  "gpt-4o",
-  "gpt-4o-2024-05-13",
-  "gpt-4o-2024-08-06",
-  "gpt-4o-2024-11-20",
-  "chatgpt-4o-latest",
-  "gpt-4o-mini",
-  "gpt-4o-mini-2024-07-18",
-  "gpt-4-vision-preview",
-  "gpt-4-turbo-2024-04-09",
-  "gpt-4-1106-preview",
-  "dall-e-3",
-  "o1-mini",
-  "o1-preview",
-  "o3-mini",
+  "gpt-5.6",
+  "gpt-5.6-sol",
+  "gpt-5.6-terra",
+  "gpt-5.6-luna",
+  "gpt-image-2",
 ];
 
+// Gemini 1.x / 2.0 全系已下线。以下为当前 stable + 一个 preview 旗舰。
 const googleModels = [
-  "gemini-1.0-pro", // Deprecated on 2/15/2025
-  "gemini-1.5-pro-latest",
-  "gemini-1.5-pro",
-  "gemini-1.5-pro-002",
-  "gemini-1.5-pro-exp-0827",
-  "gemini-1.5-flash-latest",
-  "gemini-1.5-flash-8b-latest",
-  "gemini-1.5-flash",
-  "gemini-1.5-flash-8b",
-  "gemini-1.5-flash-002",
-  "gemini-1.5-flash-exp-0827",
-  "learnlm-1.5-pro-experimental",
-  "gemini-exp-1114",
-  "gemini-exp-1121",
-  "gemini-exp-1206",
-  "gemini-2.0-flash",
-  "gemini-2.0-flash-exp",
-  "gemini-2.0-flash-lite-preview-02-05",
-  "gemini-2.0-flash-thinking-exp",
-  "gemini-2.0-flash-thinking-exp-1219",
-  "gemini-2.0-flash-thinking-exp-01-21",
-  "gemini-2.0-pro-exp",
-  "gemini-2.0-pro-exp-02-05",
+  "gemini-3.6-flash",
+  "gemini-3.5-flash",
+  "gemini-3.5-flash-lite",
+  "gemini-3.1-flash-lite",
+  "gemini-3.1-pro-preview",
+  "gemini-2.5-pro",
+  "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
 ];
 
+// Claude 3.x 全系已退役（claude-3-7-sonnet / claude-3-5-haiku 于 2026-02-19 下线）。
+// 以下均为在服模型，别名不带日期后缀。
 const anthropicModels = [
-  "claude-instant-1.2",
-  "claude-2.0",
-  "claude-2.1",
-  "claude-3-sonnet-20240229",
-  "claude-3-opus-20240229",
-  "claude-3-opus-latest",
-  "claude-3-haiku-20240307",
-  "claude-3-5-haiku-20241022",
-  "claude-3-5-haiku-latest",
-  "claude-3-5-sonnet-20240620",
-  "claude-3-5-sonnet-20241022",
-  "claude-3-5-sonnet-latest",
-  "claude-3-7-sonnet-20250219",
-  "claude-3-7-sonnet-latest",
+  "claude-fable-5",
+  "claude-opus-5",
+  "claude-sonnet-5",
+  "claude-haiku-4-5",
+  "claude-opus-4-8",
+  "claude-opus-4-7",
+  "claude-opus-4-6",
+  "claude-opus-4-5",
+  "claude-sonnet-4-6",
+  "claude-sonnet-4-5",
 ];
 
 const baiduModels = [
@@ -603,7 +552,13 @@ const iflytekModels = [
   "4.0Ultra",
 ];
 
-const deepseekModels = ["deepseek-chat", "deepseek-coder", "deepseek-reasoner"];
+// 本项目的 DeepSeek 走 NVIDIA NIM 转发（见 app/api/deepseek.ts），
+// 因此这里使用 NIM 的模型 ID。DeepSeek 官方的 deepseek-chat /
+// deepseek-coder / deepseek-reasoner 已于 2026-07-24 下线。
+const deepseekModels = [
+  "deepseek-ai/deepseek-v4-pro",
+  "deepseek-ai/deepseek-v4-flash",
+];
 
 const xAIModes = [
   "grok-beta",
@@ -654,7 +609,8 @@ const siliconflowModels = [
 ];
 
 const nvidiaModels = [
-  "deepseek-ai/deepseek-r1",
+  "deepseek-ai/deepseek-v4-pro",
+  "deepseek-ai/deepseek-v4-flash",
 ];
 
 let seq = 1000; // 内置的模型序号生成器从1000开始

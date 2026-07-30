@@ -113,7 +113,7 @@ const ACCESS_CODES = (function getAccessCodes(): Set<string> {
   }
 })();
 
-function getApiKey(keys?: string) {
+export function getApiKey(keys?: string) {
   const apiKeyEnvVar = keys ?? "";
   const apiKeys = apiKeyEnvVar.split(",").map((v) => v.trim());
   const randomIndex = Math.floor(Math.random() * apiKeys.length);

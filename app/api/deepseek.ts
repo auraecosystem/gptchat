@@ -1,4 +1,4 @@
-import { getServerSideConfig } from "@/app/config/server";
+import { getServerSideConfig, getApiKey } from "@/app/config/server";
 import {
   NVIDIA_BASE_URL,
   ApiPath,
@@ -12,7 +12,15 @@ import { isModelNotavailableInServer } from "@/app/utils/model";
 
 const serverConfig = getServerSideConfig();
 // 使用NVIDIA的API端点和密钥
-const NVIDIA_API_KEY = "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";
+const NVIDIA_API_KEY = getApiKey(process.env.DEEPSEEK_API_KEY);
+
+// 旧的 DeepSeek 官方模型名 -> NVIDIA NIM 模型名
+const LEGACY_MODEL_MAP: Record<string, string> = {
+  "deepseek-chat": "deepseek-ai/deepseek-v4-flash",
+  "deepseek-coder": "deepseek-ai/deepseek-v4-flash",
+  "deepseek-reasoner": "deepseek-ai/deepseek-v4-pro",
+  "deepseek-ai/deepseek-r1": "deepseek-ai/deepseek-v4-pro",
+};
 
 export async function handle(
   req: NextRequest,
@@ -68,7 +76,7 @@ async function request(req: NextRequest) {
   );
 
   const fetchUrl = `${baseUrl}${path}`;
-  
+
   // 使用NVIDIA的API密钥
   const fetchOptions: RequestInit = {
     headers: {
@@ -88,14 +96,16 @@ async function request(req: NextRequest) {
     try {
       const clonedBody = await req.text();
       const jsonBody = JSON.parse(clonedBody);
-      
-      // 将模型名称替换为NVIDIA的DeepSeek模型
+
+      // DeepSeek 官方的 deepseek-chat / deepseek-coder / deepseek-reasoner
+      // 已于 2026-07-24 下线，这里把历史会话里残留的旧模型名映射到
+      // NVIDIA NIM 上对应的 DeepSeek V4 模型；已经是 NIM 模型名的直接透传。
       if (jsonBody.model) {
-        jsonBody.model = "deepseek-ai/deepseek-r1";
+        jsonBody.model = LEGACY_MODEL_MAP[jsonBody.model] ?? jsonBody.model;
       }
-      
+
       fetchOptions.body = JSON.stringify(jsonBody);
-      
+
       // 检查模型可用性
       if (
         serverConfig.customModels &&
@@ -119,7 +129,7 @@ async function request(req: NextRequest) {
       console.error(`[DeepSeek] filter`, e);
     }
   }
-  
+
   try {
     const res = await fetch(fetchUrl, fetchOptions);
 

@@ -71,7 +71,7 @@ export const DEFAULT_CONFIG = {
   models: DEFAULT_MODELS as any as LLMModel[],
 
   modelConfig: {
-    model: "gpt-4o-mini" as ModelType,
+    model: "gpt-5.6-luna" as ModelType,
     providerName: "OpenAI" as ServiceProvider,
     temperature: 0.5,
     top_p: 1,
@@ -102,7 +102,7 @@ export const DEFAULT_CONFIG = {
   realtimeConfig: {
     enable: false,
     provider: "OpenAI" as ServiceProvider,
-    model: "gpt-4o-realtime-preview-2024-10-01",
+    model: "gpt-realtime-2.1",
     apiKey: "",
     azure: {
       endpoint: "",
@@ -273,7 +273,7 @@ export const useAccessStore = create<AccessControlStore>()(
   persist(
     (set, get) => ({
       nvidiaApiKey: DEFAULT_CONFIG.nvidiaApiKey,
-      
+
       updateNvidiaApiKey(key: string) {
         set((state) => ({ nvidiaApiKey: key }));
       },
