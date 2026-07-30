@@ -24,6 +24,7 @@ import { DeepSeekApi } from "./platforms/deepseek";
 import { XAIApi } from "./platforms/xai";
 import { ChatGLMApi } from "./platforms/glm";
 import { SiliconflowApi } from "./platforms/siliconflow";
+import { Ai302Api } from "./platforms/ai302";
 
 import { NvidiaDeepSeekApi } from "./platforms/nvidia";
 
@@ -178,6 +179,9 @@ export class ClientApi {
       case ModelProvider.NvidiaDeepSeek:
         this.llm = new NvidiaDeepSeekApi();
         break;
+      case ModelProvider["302.AI"]:
+        this.llm = new Ai302Api();
+        break;
       default:
         this.llm = new ChatGPTApi();
     }
@@ -270,6 +274,7 @@ export function getHeaders(ignoreHeaders: boolean = false) {
     const isChatGLM = modelConfig.providerName === ServiceProvider.ChatGLM;
     const isSiliconFlow =
       modelConfig.providerName === ServiceProvider.SiliconFlow;
+    const isAI302 = modelConfig.providerName === ServiceProvider["302.AI"];
     const isEnabledAccessControl = accessStore.enabledAccessControl();
     const apiKey = isGoogle
       ? accessStore.googleApiKey
@@ -295,6 +300,8 @@ export function getHeaders(ignoreHeaders: boolean = false) {
       ? accessStore.iflytekApiKey && accessStore.iflytekApiSecret
         ? accessStore.iflytekApiKey + ":" + accessStore.iflytekApiSecret
         : ""
+      : isAI302
+      ? accessStore.ai302ApiKey
       : accessStore.openaiApiKey;
     return {
       isGoogle,
@@ -309,6 +316,7 @@ export function getHeaders(ignoreHeaders: boolean = false) {
       isXAI,
       isChatGLM,
       isSiliconFlow,
+      isAI302,
       apiKey,
       isEnabledAccessControl,
     };
@@ -337,6 +345,7 @@ export function getHeaders(ignoreHeaders: boolean = false) {
     isXAI,
     isChatGLM,
     isSiliconFlow,
+    isAI302,
     apiKey,
     isEnabledAccessControl,
   } = getConfig();
@@ -389,6 +398,8 @@ export function getClientApi(provider: ServiceProvider): ClientApi {
       return new ClientApi(ModelProvider.SiliconFlow);
     case ServiceProvider.Nvidia:
       return new ClientApi(ModelProvider.NvidiaDeepSeek);
+    case ServiceProvider["302.AI"]:
+      return new ClientApi(ModelProvider["302.AI"]);
     default:
       return new ClientApi(ModelProvider.GPT);
   }

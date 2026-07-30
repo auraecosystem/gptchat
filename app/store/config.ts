@@ -16,8 +16,6 @@ import {
 } from "../constant";
 import { createPersistStore } from "../utils/store";
 import type { Voice } from "rt-client";
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
 
 export type ModelType = (typeof DEFAULT_MODELS)[number]["name"];
 export type TTSModelType = (typeof DEFAULT_TTS_MODELS)[number];
@@ -39,11 +37,6 @@ export enum Theme {
 }
 
 const config = getClientConfig();
-
-export interface AccessControlStore {
-  nvidiaApiKey: string;
-  updateNvidiaApiKey: (key: string) => void;
-}
 
 export const DEFAULT_CONFIG = {
   lastUpdate: Date.now(), // timestamp, to merge state
@@ -111,8 +104,6 @@ export const DEFAULT_CONFIG = {
     temperature: 0.9,
     voice: "alloy" as Voice,
   },
-
-  nvidiaApiKey: "",
 };
 
 export type ChatConfig = typeof DEFAULT_CONFIG;
@@ -267,20 +258,4 @@ export const useAppConfig = createPersistStore(
       return state as any;
     },
   },
-);
-
-export const useAccessStore = create<AccessControlStore>()(
-  persist(
-    (set, get) => ({
-      nvidiaApiKey: DEFAULT_CONFIG.nvidiaApiKey,
-
-      updateNvidiaApiKey(key: string) {
-        set((state) => ({ nvidiaApiKey: key }));
-      },
-    }),
-    {
-      name: StoreKey.Access,
-      version: 1,
-    },
-  ),
 );

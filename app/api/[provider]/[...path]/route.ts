@@ -16,6 +16,7 @@ import { handle as xaiHandler } from "../../xai";
 import { handle as chatglmHandler } from "../../glm";
 import { handle as proxyHandler } from "../../proxy";
 import { handle as nvidiaHandler } from "../../nvidia";
+import { handle as ai302Handler } from "../../302ai";
 
 async function handle(
   req: NextRequest,
@@ -55,6 +56,8 @@ async function handle(
       return openaiHandler(req, { params });
     case ApiPath.Nvidia:
       return nvidiaHandler(req, { params });
+    case ApiPath["302.AI"]:
+      return ai302Handler(req, { params });
     default:
       return proxyHandler(req, { params });
   }
