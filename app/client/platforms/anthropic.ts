@@ -185,10 +185,18 @@ export class ClaudeApi implements LLMApi {
 
       model: modelConfig.model,
       max_tokens: modelConfig.max_tokens,
-      temperature: modelConfig.temperature,
-      top_p: modelConfig.top_p,
+      // Anthropic API does not allow both temperature and top_p to be set
+      // Only claude-opus-4-7 has deprecated temperature/top_p/top_k parameters
+      // Other Claude 4.x models (4.5, 4.6) support them normally
+      ...(modelConfig.model === "claude-opus-4-7"
+        ? {}
+        : modelConfig.temperature !== 1
+          ? { temperature: modelConfig.temperature }
+          : { top_p: modelConfig.top_p }),
       // top_k: modelConfig.top_k,
-      top_k: 5,
+      ...(modelConfig.model === "claude-opus-4-7"
+        ? {}
+        : { top_k: 5 }),
     };
 
     const path = this.path(Anthropic.ChatPath);
