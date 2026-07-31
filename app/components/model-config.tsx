@@ -9,15 +9,6 @@ import { groupBy } from "lodash-es";
 import styles from "./model-config.module.scss";
 import { getModelProvider } from "../utils/model";
 
-const PREDEFINED_MODELS = {
-  [ServiceProvider.Nvidia]: [
-    {
-      name: "deepseek-ai/deepseek-r1",
-      displayName: "DeepSeek R1",
-    },
-  ],
-};
-
 export function ModelConfigList(props: {
   modelConfig: ModelConfig;
   updateConfig: (updater: (config: ModelConfig) => void) => void;

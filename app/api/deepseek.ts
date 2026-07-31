@@ -1,6 +1,6 @@
-import { getServerSideConfig, getApiKey } from "@/app/config/server";
+import { getServerSideConfig } from "@/app/config/server";
 import {
-  NVIDIA_BASE_URL,
+  DEEPSEEK_BASE_URL,
   ApiPath,
   ModelProvider,
   ServiceProvider,
@@ -11,16 +11,6 @@ import { auth } from "@/app/api/auth";
 import { isModelNotavailableInServer } from "@/app/utils/model";
 
 const serverConfig = getServerSideConfig();
-// 使用NVIDIA的API端点和密钥
-const NVIDIA_API_KEY = getApiKey(process.env.DEEPSEEK_API_KEY);
-
-// 旧的 DeepSeek 官方模型名 -> NVIDIA NIM 模型名
-const LEGACY_MODEL_MAP: Record<string, string> = {
-  "deepseek-chat": "deepseek-ai/deepseek-v4-flash",
-  "deepseek-coder": "deepseek-ai/deepseek-v4-flash",
-  "deepseek-reasoner": "deepseek-ai/deepseek-v4-pro",
-  "deepseek-ai/deepseek-r1": "deepseek-ai/deepseek-v4-pro",
-};
 
 export async function handle(
   req: NextRequest,
@@ -51,11 +41,10 @@ export async function handle(
 async function request(req: NextRequest) {
   const controller = new AbortController();
 
-  // 使用DeepSeek的路径，但将请求发送到NVIDIA的API端点
+  // alibaba use base url or just remove the path
   let path = `${req.nextUrl.pathname}`.replaceAll(ApiPath.DeepSeek, "");
 
-  // 使用NVIDIA的基础URL
-  let baseUrl = NVIDIA_BASE_URL;
+  let baseUrl = serverConfig.deepseekUrl || DEEPSEEK_BASE_URL;
 
   if (!baseUrl.startsWith("http")) {
     baseUrl = `https://${baseUrl}`;
@@ -76,12 +65,10 @@ async function request(req: NextRequest) {
   );
 
   const fetchUrl = `${baseUrl}${path}`;
-
-  // 使用NVIDIA的API密钥
   const fetchOptions: RequestInit = {
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${NVIDIA_API_KEY}`,
+      Authorization: req.headers.get("Authorization") ?? "",
     },
     method: req.method,
     body: req.body,
@@ -91,24 +78,16 @@ async function request(req: NextRequest) {
     signal: controller.signal,
   };
 
-  // 修改请求体，确保使用正确的模型名称
-  if (req.body) {
+  // #1815 try to refuse some request to some models
+  if (serverConfig.customModels && req.body) {
     try {
       const clonedBody = await req.text();
-      const jsonBody = JSON.parse(clonedBody);
+      fetchOptions.body = clonedBody;
 
-      // DeepSeek 官方的 deepseek-chat / deepseek-coder / deepseek-reasoner
-      // 已于 2026-07-24 下线，这里把历史会话里残留的旧模型名映射到
-      // NVIDIA NIM 上对应的 DeepSeek V4 模型；已经是 NIM 模型名的直接透传。
-      if (jsonBody.model) {
-        jsonBody.model = LEGACY_MODEL_MAP[jsonBody.model] ?? jsonBody.model;
-      }
+      const jsonBody = JSON.parse(clonedBody) as { model?: string };
 
-      fetchOptions.body = JSON.stringify(jsonBody);
-
-      // 检查模型可用性
+      // not undefined and is false
       if (
-        serverConfig.customModels &&
         isModelNotavailableInServer(
           serverConfig.customModels,
           jsonBody?.model as string,
@@ -129,7 +108,6 @@ async function request(req: NextRequest) {
       console.error(`[DeepSeek] filter`, e);
     }
   }
-
   try {
     const res = await fetch(fetchUrl, fetchOptions);
 

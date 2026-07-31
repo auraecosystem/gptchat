@@ -1320,18 +1320,6 @@ export function Settings() {
               config.update((config) => (config.modelConfig = modelConfig));
             }}
           />
-
-          {/* Add NVIDIA API Key Input */}
-          {accessStore.provider === ServiceProvider.Nvidia && (
-            <input
-              type="password"
-              placeholder="NVIDIA API Key"
-              value={accessStore.nvidiaApiKey}
-              onChange={(e) => {
-                accessStore.updateNvidiaApiKey(e.currentTarget.value);
-              }}
-            />
-          )}
         </List>
 
         {shouldShowPromptModal && (

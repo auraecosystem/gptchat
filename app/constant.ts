@@ -13,7 +13,6 @@ export const OPENAI_BASE_URL = "https://api.openai.com";
 export const ANTHROPIC_BASE_URL = "https://api.anthropic.com";
 export const ALIBABA_BASE_URL = "https://dashscope.aliyuncs.com/api/";
 export const DEEPSEEK_BASE_URL = "https://api.deepseek.com";
-export const NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1";
 
 export const CACHE_URL_PREFIX = "/api/cache";
 export const UPLOAD_URL = `${CACHE_URL_PREFIX}/upload`;
@@ -62,7 +61,6 @@ export enum ApiPath {
   ChatGLM = "/api/chatglm",
   /** @deprecated removed in trim-models build */
   SiliconFlow = "/api/siliconflow",
-  Nvidia = "/api/nvidia",
   /** @deprecated removed in trim-models build */
   "302.AI" = "/api/302ai",
 }
@@ -134,7 +132,6 @@ export enum ServiceProvider {
   ChatGLM = "ChatGLM",
   /** @deprecated removed in trim-models build */
   SiliconFlow = "SiliconFlow",
-  Nvidia = "Nvidia",
   /** @deprecated removed in trim-models build */
   "302.AI" = "302.AI",
 }
@@ -173,7 +170,6 @@ export enum ModelProvider {
   ChatGLM = "ChatGLM",
   /** @deprecated removed in trim-models build */
   SiliconFlow = "SiliconFlow",
-  NvidiaDeepSeek = "NvidiaDeepSeek",
   /** @deprecated removed in trim-models build */
   "302.AI" = "302.AI",
 }
@@ -352,8 +348,7 @@ You are an AI assistant with access to system tools. Your role is to help users 
 `;
 
 export const SUMMARIZE_MODEL = "gpt-5.6-luna";
-// 本分支的 DeepSeek 走 NVIDIA NIM 转发（见 app/api/deepseek.ts）
-export const DEEPSEEK_SUMMARIZE_MODEL = "deepseek-ai/deepseek-v4-flash";
+export const DEEPSEEK_SUMMARIZE_MODEL = "deepseek-v4-flash";
 
 export const KnowledgeCutOffDate: Record<string, string> = {
   default: "2021-09",
@@ -552,17 +547,8 @@ const alibabaModes = [
   "qwen-omni-turbo",
 ];
 
-// 本分支的 DeepSeek 经 app/api/deepseek.ts 转发到 NVIDIA NIM，故使用 NIM 的模型 ID。
-// DeepSeek 官方的 deepseek-chat / deepseek-coder / deepseek-reasoner 已于 2026-07-24 下线。
-const deepseekModels = [
-  "deepseek-ai/deepseek-v4-pro",
-  "deepseek-ai/deepseek-v4-flash",
-];
-
-const nvidiaModels = [
-  "deepseek-ai/deepseek-v4-pro",
-  "deepseek-ai/deepseek-v4-flash",
-];
+// deepseek-chat / deepseek-coder / deepseek-reasoner 已于 2026-07-24 下线。
+const deepseekModels = ["deepseek-v4-pro", "deepseek-v4-flash"];
 
 let seq = 1000; // 内置的模型序号生成器从1000开始
 export const DEFAULT_MODELS = [
@@ -608,17 +594,6 @@ export const DEFAULT_MODELS = [
       providerName: "DeepSeek",
       providerType: "deepseek",
       sorted: 4,
-    },
-  })),
-  ...nvidiaModels.map((name) => ({
-    name,
-    available: true,
-    sorted: seq++,
-    provider: {
-      id: "nvidia",
-      providerName: "Nvidia",
-      providerType: "nvidia",
-      sorted: 5,
     },
   })),
 ] as const;

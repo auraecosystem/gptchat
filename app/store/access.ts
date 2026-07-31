@@ -84,9 +84,6 @@ const DEFAULT_ACCESS_STATE = {
   ai302Url: "",
   ai302ApiKey: "",
 
-  // nvidia
-  nvidiaApiKey: "",
-
   // server config
   needCode: true,
   hideUserApiKey: false,
@@ -146,14 +143,6 @@ export const useAccessStore = createPersistStore(
       return false;
     },
 
-    isValidNvidia() {
-      return ensure(get(), ["nvidiaApiKey"]);
-    },
-
-    updateNvidiaApiKey(key: string) {
-      set(() => ({ nvidiaApiKey: key }));
-    },
-
     isAuthorized() {
       this.fetch();
 
@@ -163,7 +152,6 @@ export const useAccessStore = createPersistStore(
         this.isValidAnthropic() ||
         this.isValidAlibaba() ||
         this.isValidDeepSeek() ||
-        this.isValidNvidia() ||
         !this.enabledAccessControl() ||
         (this.enabledAccessControl() && ensure(get(), ["accessCode"]))
       );
