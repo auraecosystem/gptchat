@@ -32,6 +32,8 @@ const en: LocaleType = {
   },
   ChatItem: {
     ChatItemCount: (count: number) => `${count} messages`,
+    PinChat: "Pin this chat",
+    UnpinChat: "Unpin this chat",
   },
   Chat: {
     SubTitle: (count: number) => `${count} messages`,
