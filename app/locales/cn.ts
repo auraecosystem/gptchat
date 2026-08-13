@@ -795,6 +795,7 @@ const cn = {
     Import: "导入",
     Sync: "同步",
     Config: "配置",
+    NewWindow: "新窗口",
   },
   Exporter: {
     Description: {

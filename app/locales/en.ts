@@ -801,6 +801,7 @@ const en: LocaleType = {
     Import: "Import",
     Sync: "Sync",
     Config: "Config",
+    NewWindow: "New Window",
   },
   Exporter: {
     Description: {
