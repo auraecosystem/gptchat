@@ -1,0 +1,20 @@
+flowchart LR
+  Old[Old README] --> O1[Overview]
+  Old --> O2[Get Started]
+  Old --> O3[Env Vars (basic)]
+  Old --> O4[Deployment (Vercel)]
+  Old --> O5[Features (base)]
+
+  New[New README] --> N1[Overview (expanded)]
+  New --> N2[Get Started (Local + Docker + Vercel)]
+  New --> N3[Env Vars (many providers)]:::added
+  New --> N4[Deployment (Vercel, Docker, Zeabur, Cloudflare)]:::changed
+  New --> N5[Features (Realtime, Plugins, MCP, Artifacts)]:::added
+
+  O3 --> N3
+  O4 --> N4
+  O5 --> N5
+
+  classDef added fill:#e6ffed,stroke:#2ecc71,stroke-width:1.5px
+  classDef changed fill:#fff4e6,stroke:#f39c12,stroke-width:1.5px
+  classDef removed fill:#ffe6e6,stroke:#e74c3c,stroke-width:1.5px
