@@ -413,7 +413,7 @@ If your proxy needs password, use:
 
 If enable MCP, use：
 
-```
+```ps1
 docker run -d -p 3000:3000 \
    -e OPENAI_API_KEY=sk-xxxx \
    -e CODE=your-password \
