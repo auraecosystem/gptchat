@@ -1,0 +1,16 @@
+flowchart LR
+  Dev[Developer / Maintainer]
+  Dev --> Local[Local (yarn dev)]
+  Dev --> Docker[Docker image]
+  Dev --> Vercel[Vercel (one-click)]
+  Dev --> Zeabur[Zeabur]
+  Dev --> Cloudflare[Cloudflare Pages (Deprecated)]
+  Docker --> Prod[Production / Server]
+  Vercel --> Prod
+  Zeabur --> Prod
+  Cloudflare --> Prod
+  Prod --> Users[End users (Web / Desktop / Mobile)]
+  note right of Prod
+    Example env:
+    OPENAI_API_KEY, CODE, ENABLE_MCP, PROXY_URL...
+  end
