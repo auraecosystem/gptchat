@@ -1,0 +1,32 @@
+flowchart LR
+  subgraph Client
+    U[Browser / Desktop / Mobile]
+  end
+
+  subgraph Server
+    S[NextChat Server / API]
+    P[Proxy / Middleware / Auth]
+  end
+
+  subgraph Providers
+    OA[OpenAI / Azure]
+    GG[Google Gemini Pro]
+    AN[Anthropic Claude]
+    DS[DeepSeek / Third-party]
+    LA[LocalAI / RWKV / Self-hosted]
+  end
+
+  U -->|chat request| S
+  S --> P
+  P --> OA
+  P --> GG
+  P --> AN
+  P --> DS
+  P --> LA
+  OA -->|response| P
+  GG -->|response| P
+  AN -->|response| P
+  DS -->|response| P
+  LA -->|response| P
+  P --> S
+  S -->|stream/complete| U
